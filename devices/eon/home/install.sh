@@ -6,7 +6,7 @@ while true; do
     sleep 1
 done
 
-mount -o remount,rw /system
+mount -o remount,rw /
 
 # Execute all apt postinstall scripts
 chmod +x /usr/var/lib/dpkg/info/*.postinst
@@ -38,7 +38,7 @@ pushd build/$BINUTILS
   --with-mode=thumb \
   --disable-nls \
   --disable-werror
-make -j4 all
+make -j8 all
 make install
 popd
 
@@ -64,7 +64,7 @@ pushd build/$GCC
   --enable-languages="c" \
   --disable-nls \
   --disable-libgcc
-make -j4 all-gcc
+make -j8 all-gcc
 make install-gcc
 popd
 
@@ -83,7 +83,7 @@ tar xvf capnproto-c++-${VERSION}.tar.gz
 pushd capnproto-c++-${VERSION}
 
 CXXFLAGS="-fPIC -O2" ./configure --prefix=/usr
-make -j4 install
+make -j8 install
 popd
 
 # ---- Eigen
@@ -102,7 +102,7 @@ wget --tries=inf https://github.com/libusb/libusb/releases/download/v1.0.22/libu
 tar xjf libusb-1.0.22.tar.bz2
 pushd libusb-1.0.22
 ./configure --prefix=/usr --disable-udev
-make -j4
+make -j8
 make install
 popd
 
@@ -112,7 +112,7 @@ wget --tries=inf https://www.tcpdump.org/release/tcpdump-$VERSION.tar.gz
 tar xvf tcpdump-$VERSION.tar.gz
 pushd tcpdump-$VERSION
 ./configure --prefix=/usr
-make -j4
+make -j8
 make install
 popd
 
@@ -121,7 +121,7 @@ wget --tries=inf http://dfu-util.sourceforge.net/releases/dfu-util-0.8.tar.gz
 tar xvf dfu-util-0.8.tar.gz
 pushd dfu-util-0.8
 ./configure --prefix=/usr
-make -j4
+make -j8
 make install
 popd
 
@@ -131,7 +131,7 @@ tar xvf nload-v0.7.4.tar.gz
 pushd nload-0.7.4
 bash run_autotools
 ./configure --prefix=/usr
-make -j4
+make -j8
 make install
 popd
 
@@ -160,7 +160,7 @@ cmake -DWITH_PYTHON=ON \
       -DLIB_PREFIX=/usr/lib \
       -DINCLUDE_PREFIX=/usr/include \
       ..
-make -j4
+make -j8
 make install
 rm -rf /usr/local/
 python -c "from casadi import *"

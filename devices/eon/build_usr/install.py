@@ -6,23 +6,16 @@ import os
 import tempfile
 import shutil
 
-#BASE_URL = 'http://termux.net/'
-BASE_URL = 'http://termux.comma.ai/'
+BASE_URL = 'https://packages.termux.org/apt/termux-main/'
+#BASE_URL = 'http://termux.comma.ai/'
 
 # Create mirror using
 # lftp -c "mirror --use-pget-n=10 --verbose http://termux.net"
 # azcopy --source dists/ --destination https://termuxdist.blob.core.windows.net/dists --recursive --dest-key $(az storage account keys list --account-name termuxdist --output tsv --query "[0].value")
 
+DEFAULT_PKG = ['apt', 'bash', 'busybox', 'ca-certificates', 'command-not-found', 'dash', 'dash', 'dpkg', 'gdbm', 'gpgv', 'libandroid-support', 'libbz2', 'libc++', 'libcrypt', 'libcrypt', 'libcurl', 'libffi', 'libgcrypt', 'libgpg-error', 'liblzma', 'libnghttp2', 'libsqlite', 'libutil', 'ncurses', 'ncurses-ui-libs', 'openssl', 'python', 'readline', 'termux-am', 'termux-exec', 'termux-tools', 'qt5-base', 'qt5-declarative', 'libicu', 'swig', 'gettext', 'ripgrep']
+#DEFAULT_PKG = ['apt', 'bash', 'busybox', 'ca-certificates', 'command-not-found', 'dash', 'dash', 'dpkg', 'gdbm', 'gpgv', 'libandroid-support', 'libbz2', 'libc++', 'libcrypt', 'libcrypt-dev', 'libcurl', 'libffi', 'libgcrypt', 'libgpg-error', 'liblzma', 'libnghttp2', 'libsqlite', 'libutil', 'ncurses', 'ncurses-ui-libs', 'openssl', 'python', 'readline', 'termux-am', 'termux-exec', 'termux-tools', 'qt5-base', 'qt5-declarative', 'libicu', 'swig', 'gettext', 'ripgrep']
 
-DEFAULT_PKG = ['apt', 'bash', 'busybox', 'ca-certificates', 'command-not-found', 'dash', 'dash', 'dpkg', 'gdbm', 'gpgv', 'libandroid-support', 'libbz2', 'libc++', 'libcrypt', 'libcrypt-dev', 'libcurl', 'libffi', 'libgcrypt', 'libgpg-error', 'liblzma', 'libnghttp2', 'libsqlite', 'libutil', 'ncurses', 'ncurses-ui-libs', 'openssl', 'python', 'readline', 'termux-am', 'termux-exec', 'termux-tools', 'qt5-base', 'qt5-declarative', 'libicu', 'swig', 'gettext', 'ripgrep']
-
-# The checked-in debs are built using the neos branch on:
-# https://github.com/commaai/termux-packages/tree/neos/
-#
-# Quick Start:
-#  * start docker: scripts/run-docker.sh
-#  * build inside container: ./build-package.sh -a aarch64 python
-#  * copy the deb from termux-packages/debs/
 
 LOCAL_OVERRIDE_PKG = {
   #'rust': 'rust_1.38.0-4_aarch64.deb',
@@ -32,8 +25,14 @@ LOCAL_OVERRIDE_PKG = {
   'gettext': 'gettext_0.20.1-3_aarch64.deb',
   'ripgrep': 'ripgrep_11.0.2-1_aarch64.deb',
   'qt5-base': 'qt5-base_5.12.8-28_aarch64.deb',
-  'qt5-declarative': 'qt5-declarative_5.12.8-28_aarch64.deb'
+  'qt5-declarative': 'qt5-declarative_5.12.8-28_aarch64.deb',
+  'htop': 'htop_2.2.0-2_aarch64.deb',
+  'libutil': 'libutil_0.4_aarch64.deb',
+  'm4': 'm4_1.4.19-3_aarch64.deb',
+  'git-lfs': 'git-lfs_3.1.2_aarch64.deb',
 }
+
+NOTS = ['libcurl-dev', 'libuuid-dev', 'ffmpeg-dev', 'libutil', 'libffi-dev', 'liblz4-dev', 'libpcap-dev', 'htop', 'libjpeg-turbo-dev', 'libcrypt-dev', 'openssl-dev', 'dropbear', 'liblzo-dev', 'ncurses-dev']
 
 def load_packages():
     pkg_deps = {}
@@ -57,6 +56,7 @@ def load_packages():
             pkg_filename = l.split(': ')[1]
             pkg_deps[pkg_name] = pkg_depends
             pkg_filenames[pkg_name] = pkg_filename
+    
     return pkg_deps, pkg_filenames
 
 
@@ -71,6 +71,8 @@ def get_dependencies(pkg_deps, pkg_name):
 
     return r
 
+
+not_found = []
 
 def install_package(pkg_deps, pkg_filenames, pkg):
     if not os.path.exists('out'):
@@ -92,6 +94,7 @@ def install_package(pkg_deps, pkg_filenames, pkg):
         open(deb_path, 'wb').write(r.content)
     else:
         print("%s not found" % pkg)
+        not_found.append(pkg)
         return ""
 
     subprocess.check_call(['ar', 'x', deb_path], cwd=tmp_dir)
@@ -145,33 +148,26 @@ if __name__ == "__main__":
         'coreutils',
         'curl',
         'ffmpeg',
-        'ffmpeg-dev',
         'flex',
         'gdb',
         'git',
         'git-lfs',
         'htop',
         'jq',
-        'libcurl-dev',
-        'libffi-dev',
+        'libcurl',
+        'libffi',
         'libjpeg-turbo',
-        'libjpeg-turbo-dev',
         'liblz4',
-        'liblz4-dev',
         'liblzo',
-        'liblzo-dev',
         'libmpc',
         'libtool',
-        'libuuid-dev',
         #'libzmq',
         'libpcap',
-        'libpcap-dev',
         'make',
         'man',
         'nano',
-        'ncurses-dev',
         'openssh',
-        'openssl-dev',
+        'openssl',
         'openssl-tool',
         'patchelf',
         'pkg-config',
@@ -182,9 +178,11 @@ if __name__ == "__main__":
         'vim',
         'wget',
         'xz-utils',
-        'zlib-dev',
+        'zlib',
+        'gawk',
+        'findutils',
+        'm4'
     ]
-
     pkg_deps, pkg_filenames = load_packages()
     deps = []
     for pkg in to_install:
